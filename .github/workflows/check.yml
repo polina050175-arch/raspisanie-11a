@@ -1,0 +1,33 @@
+name: Check Schedule 11A
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install requests
+      
+      - name: Check schedule
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: python check_schedule.py
+      
+      - name: Commit hash if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add last_hash.txt || true
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update schedule hash" && git push)
